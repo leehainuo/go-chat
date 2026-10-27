@@ -1,0 +1,56 @@
+# ---------- 编译产物 ----------
+/bin/
+/build/
+/dist/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# ---------- 测试与性能分析 ----------
+*.test
+*.out
+*.prof
+coverage.txt
+coverage.html
+
+# ---------- 依赖 ----------
+/vendor/
+
+# ---------- 环境与敏感配置 ----------
+# 各服务 etc/*.yaml 主配置入库；本地覆盖、含密钥的文件不入库
+.env
+.env.*
+*.local.yaml
+*.local.yml
+*.pem
+*.key
+
+# ---------- 日志 ----------
+logs/
+*.log
+
+# ---------- 热重载（air 默认构建输出目录）----------
+/tmp/
+
+# ---------- 本地运行时数据 ----------
+/data/
+*.db
+*.sqlite
+*.sqlite3
+
+# ---------- 操作系统 ----------
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---------- IDE / 编辑器 ----------
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Cursor 本地安装的技能不入库；团队共享规则可放行 .cursor/rules/
+.cursor/skills/
