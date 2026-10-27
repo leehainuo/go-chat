@@ -1,0 +1,173 @@
+syntax = "v1"
+
+info (
+	author: "leehainuo"
+	date:   "2026-10-27"
+	desc:   "用户模块：登录注册与退出、用户资料与头像、余额与流水。设计卡 docs/designs/phase-01-用户模块.md"
+)
+
+// ==================== 请求 ====================
+type SendCaptchaReq {
+	Account string `form:"account,optional"`
+}
+
+type LoginCodeReq {
+	Account string `json:"account"`
+	Code    string `json:"code"`
+}
+
+type LoginPwdReq {
+	Account  string `json:"account"`
+	Password string `json:"password"`
+}
+
+type RegisterReq {
+	Account  string `json:"account"`
+	Code     string `json:"code"`
+	Password string `json:"password"`
+	Nickname string `json:"nickname,optional"`
+}
+
+type UpdatePwdReq {
+	OldPassword string `json:"oldPassword"`
+	NewPassword string `json:"newPassword"`
+}
+
+type UpdateAvatarReq {
+	Avatar string `json:"avatar"`
+}
+
+type RefreshTokenReq {
+	RefreshToken string `form:"refreshToken"`
+}
+
+type UploadUrlReq {
+	FileName string `form:"fileName,optional"`
+}
+
+type BalanceReq {
+	UserId int64 `path:"userID"`
+}
+
+type BalanceDetailReq {
+	UserId   int64 `path:"userID"`
+	PageNum  int64 `form:"pageNum,optional,default=1"`
+	PageSize int64 `form:"pageSize,optional,default=10"`
+}
+
+// ==================== 响应 ====================
+type LoginResp {
+	UserId       int64  `json:"userId"`
+	AccessToken  string `json:"accessToken"`
+	RefreshToken string `json:"refreshToken"`
+	WsServerUri  string `json:"wsServerUri"`
+}
+
+type RefreshTokenResp {
+	AccessToken  string `json:"accessToken"`
+	RefreshToken string `json:"refreshToken"`
+}
+
+type WsServerUriResp {
+	WsServerUri string `json:"wsServerUri"`
+}
+
+type UploadUrlResp {
+	UploadUrl   string `json:"uploadUrl"`
+	DownloadUrl string `json:"downloadUrl"`
+	ObjectKey   string `json:"objectKey"`
+}
+
+type UserInfoResp {
+	UserId   int64  `json:"userId"`
+	Nickname string `json:"nickname"`
+	Phone    string `json:"phone"`
+	Email    string `json:"email"`
+	Avatar   string `json:"avatar"`
+	Balance  string `json:"balance"`
+}
+
+type BalanceResp {
+	UserId     int64  `json:"userId"`
+	Balance    string `json:"balance"`
+	BalanceFen int64  `json:"balanceFen"`
+}
+
+type BalanceDetailItem {
+	LogId        int64  `json:"logId"`
+	Type         int64  `json:"type"`
+	TypeDesc     string `json:"typeDesc"`
+	Amount       string `json:"amount"`
+	BalanceAfter string `json:"balanceAfter"`
+	Remark       string `json:"remark"`
+	CreateTime   string `json:"createTime"`
+}
+
+type BalanceDetailResp {
+	List        []BalanceDetailItem `json:"list"`
+	Total       int64               `json:"total"`
+	PageNum     int64               `json:"pageNum"`
+	PageSize    int64               `json:"pageSize"`
+	Pages       int64               `json:"pages"`
+	HasNext     bool                `json:"hasNext"`
+	HasPrevious bool                `json:"hasPrevious"`
+}
+
+type SimpleResp {
+	Ok bool `json:"ok"`
+}
+
+// ==================== 公开路由（无需登录） ====================
+@server (
+	prefix: /api/user
+	group:  user
+)
+service user-api {
+	@handler sendCaptcha
+	get /sendCaptcha (SendCaptchaReq) returns (SimpleResp)
+
+	@handler loginCode
+	post /loginCode (LoginCodeReq) returns (LoginResp)
+
+	@handler loginPwd
+	post /loginPwd (LoginPwdReq) returns (LoginResp)
+
+	@handler register
+	post /register (RegisterReq) returns (LoginResp)
+
+	@handler refreshToken
+	get /refresh/token (RefreshTokenReq) returns (RefreshTokenResp)
+}
+
+// ==================== 鉴权路由（JWT 验签 + Redis 白名单） ====================
+@server (
+	prefix:     /api/user
+	group:      user
+	middleware: JwtAuthMiddleware
+)
+service user-api {
+	@handler logout
+	post /logout returns (SimpleResp)
+
+	@handler info
+	post /info returns (UserInfoResp)
+
+	@handler updatePwd
+	post /updatePwd (UpdatePwdReq) returns (SimpleResp)
+
+	@handler updateAvatar
+	post /update/avatar (UpdateAvatarReq) returns (SimpleResp)
+
+	@handler refreshWsServerUri
+	get /refresh/wsServerUri returns (WsServerUriResp)
+
+	@handler uploadUrl
+	get /uploadUrl (UploadUrlReq) returns (UploadUrlResp)
+
+	@handler balance
+	get /balance/:userID (BalanceReq) returns (BalanceResp)
+
+	@handler balanceDetail
+	get /balanceDetail/:userID (BalanceDetailReq) returns (BalanceDetailResp)
+}
+

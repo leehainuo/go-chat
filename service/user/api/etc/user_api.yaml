@@ -1,0 +1,30 @@
+Name: user-api
+Host: 0.0.0.0
+Port: 8001
+
+MySQL:
+  DataSource: root:go-chat@tcp(localhost:3306)/gochat?charset=utf8mb4&parseTime=True&loc=Local
+
+Redis:
+  Host: localhost:6379
+  Type: node
+
+CacheRedis:
+  - Host: localhost:6379
+    Type: node
+
+JwtAuth:
+  AccessSecret: go-chat-jwt-access-secret-change-me
+  AccessExpire: 1800
+
+Minio:
+  Endpoint: localhost:9000
+  AccessKey: go-chat
+  SecretKey: go-chat
+  Bucket: gochat
+  Secure: false
+
+Etcd:
+  Endpoints:
+    - localhost:2379
+  Prefix: /services/realtimeservice
