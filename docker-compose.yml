@@ -1,0 +1,73 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: go-chat-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: go-chat
+      TZ: Asia/Shanghai
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_general_ci
+
+  redis:
+    image: redis:7
+    container_name: go-chat-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+
+  kafka:
+    image: apache/kafka:4.0.0       # 官方镜像，KRaft 模式（不需要 ZooKeeper），有原生 ARM64 镜像
+    container_name: go-chat-kafka
+    restart: always
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_NODE_ID: 0
+      KAFKA_PROCESS_ROLES: broker,controller      # 单节点同时扮演 broker 和 controller
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://localhost:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 0@localhost:9093
+      # 单节点集群，内部 topic 副本数必须降为 1
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      # 首次被读写时自动建 topic（默认 1 分区 1 副本，等效于原来的 KAFKA_CREATE_TOPICS）
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+
+  minio:
+    image: minio/minio:RELEASE.2023-09-04T19-57-37Z
+    container_name: go-chat-minio
+    restart: always
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: go-chat
+      MINIO_ROOT_PASSWORD: go-chat
+    ports:
+      - "9000:9000"   # S3 API
+      - "9001:9001"   # Web 控制台
+    volumes:
+      - minio-data:/data
+
+  etcd:
+    image: bitnami/etcd:3.5
+    container_name: go-chat-etcd
+    restart: always
+    environment:
+      ALLOW_NONE_AUTHENTICATION: "yes"
+      ETCD_LISTEN_CLIENT_URLS: http://0.0.0.0:2379
+      ETCD_ADVERTISE_CLIENT_URLS: http://localhost:2379
+    ports:
+      - "2379:2379"
+
+volumes:
+  mysql-data:
+  redis-data:
+  minio-data:
