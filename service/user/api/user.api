@@ -3,7 +3,7 @@ syntax = "v1"
 info (
 	author: "leehainuo"
 	date:   "2026-10-27"
-	desc:   "用户模块：登录注册与退出、用户资料与头像、余额与流水。设计卡 docs/designs/phase-01-用户模块.md"
+	desc:   "用户模块：登录注册与退出、用户资料与头像、余额与流水。设计卡 docs/1-designs/phase-01-用户模块.md"
 )
 
 // ==================== 请求 ====================
