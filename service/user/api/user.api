@@ -117,6 +117,115 @@ type SimpleResp {
 	Ok bool `json:"ok"`
 }
 
+// ==================== 联系人模块请求 ====================
+type SearchUserReq {
+	UserId  int64  `path:"userID"`
+	Keyword string `form:"keyword"`
+}
+
+type GetFriendsReq {
+	UserId   int64  `path:"userID"`
+	PageNum  int64  `form:"pageNum,optional,default=1"`
+	PageSize int64  `form:"pageSize,optional,default=10"`
+	Keyword  string `form:"keyword,optional"`
+}
+
+type SendFriendRequestReq {
+	UserId        int64  `path:"userID"`
+	ReceiveuserId int64  `path:"receiveuserID"`
+	Message       string `json:"message,optional"`
+}
+
+type GetApplyListReq {
+	UserId   int64 `path:"userID"`
+	PageNum  int64 `form:"pageNum,optional,default=1"`
+	PageSize int64 `form:"pageSize,optional,default=10"`
+}
+
+type GetUnreadApplyCountReq {
+	UserId int64 `path:"userID"`
+}
+
+type UserIdAndReceiveuserIdReq {
+	UserId        int64 `path:"userID"`
+	ReceiveuserId int64 `path:"receiveuserID"`
+}
+
+type GetFriendDetailReq {
+	UserId   int64 `path:"userID"`
+	FriendId int64 `path:"friendID"`
+}
+
+type ModifyFriendApplicationStatusReq {
+	UserId    int64   `path:"userID"`
+	Status    int64   `path:"status"`
+	SenderIds []int64 `json:"senderIds"`
+}
+
+// ==================== 联系人模块响应 ====================
+type FriendDetailVO {
+	UserId    int64  `json:"userId"`
+	Nickname  string `json:"nickname"`
+	Avatar    string `json:"avatar"`
+	Phone     string `json:"phone"`
+	Email     string `json:"email"`
+	Signature string `json:"signature"`
+	Gender    int64  `json:"gender"`
+	Status    int64  `json:"status"`
+	SessionId string `json:"sessionId"`
+}
+
+type FriendItem {
+	UserId    int64  `json:"userId"`
+	Nickname  string `json:"nickname"`
+	Avatar    string `json:"avatar"`
+	Signature string `json:"signature"`
+	Status    int64  `json:"status"`
+	SessionId string `json:"sessionId"`
+}
+
+type GetFriendsResp {
+	List        []FriendItem `json:"list"`
+	Total       int64        `json:"total"`
+	PageNum     int64        `json:"pageNum"`
+	PageSize    int64        `json:"pageSize"`
+	Pages       int64        `json:"pages"`
+	HasNext     bool         `json:"hasNext"`
+	HasPrevious bool         `json:"hasPrevious"`
+}
+
+type SendFriendRequestResp {
+	ApplyId int64 `json:"applyId"`
+}
+
+type ApplyItem {
+	UserId     int64  `json:"userId"`
+	Nickname   string `json:"nickname"`
+	Avatar     string `json:"avatar"`
+	Message    string `json:"message"`
+	Status     int64  `json:"status"`
+	UpdateTime string `json:"updateTime"`
+	IsReceiver int64  `json:"isReceiver"`
+}
+
+type GetApplyListResp {
+	List        []ApplyItem `json:"list"`
+	Total       int64       `json:"total"`
+	PageNum     int64       `json:"pageNum"`
+	PageSize    int64       `json:"pageSize"`
+	Pages       int64       `json:"pages"`
+	HasNext     bool        `json:"hasNext"`
+	HasPrevious bool        `json:"hasPrevious"`
+}
+
+type GetUnreadApplyCountResp {
+	Count int64 `json:"count"`
+}
+
+type ModifyApplyStatusResp {
+	SessionId string `json:"sessionId"`
+}
+
 // ==================== 公开路由（无需登录） ====================
 @server (
 	prefix: /api/user
@@ -169,5 +278,43 @@ service user-api {
 
 	@handler balanceDetail
 	get /balanceDetail/:userID (BalanceDetailReq) returns (BalanceDetailResp)
+}
+
+// ==================== 联系人路由（JWT 鉴权；路径 :userID 必须等于登录身份，logic 层逐一比对 DR-3） ====================
+@server (
+	prefix:     /api/contact
+	group:      contact
+	middleware: JwtAuthMiddleware
+)
+service user-api {
+	@handler searchUser
+	get /:userID/user/search (SearchUserReq) returns (FriendDetailVO)
+
+	@handler getFriends
+	get /:userID/friend (GetFriendsReq) returns (GetFriendsResp)
+
+	@handler sendFriendRequest
+	post /:userID/friend/:receiveuserID (SendFriendRequestReq) returns (SendFriendRequestResp)
+
+	@handler getApplyList
+	get /:userID/apply (GetApplyListReq) returns (GetApplyListResp)
+
+	@handler getUnreadApplyCount
+	get /:userID/applyCount (GetUnreadApplyCountReq) returns (GetUnreadApplyCountResp)
+
+	@handler deleteFriend
+	delete /:userID/friend/:receiveuserID (UserIdAndReceiveuserIdReq)
+
+	@handler blockFriend
+	post /:userID/block/:receiveuserID (UserIdAndReceiveuserIdReq)
+
+	@handler unblockFriend
+	delete /:userID/block/:receiveuserID (UserIdAndReceiveuserIdReq)
+
+	@handler modifyFriendApplicationStatus
+	post /:userID/application/:status (ModifyFriendApplicationStatusReq) returns (ModifyApplyStatusResp)
+
+	@handler getFriendDetail
+	get /:userID/friend/:friendID (GetFriendDetailReq) returns (FriendDetailVO)
 }
 

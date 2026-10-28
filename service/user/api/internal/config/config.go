@@ -26,6 +26,11 @@ type Config struct {
 		Endpoints []string `json:",optional"`
 		Prefix    string   `json:",default=/services/realtimeservice"`
 	}
+	// Kafka 通知（DR-5 决策：事务提交后发送，失败仅记日志不回滚；
+	// Brokers 为空时降级为仅日志，不阻断任何业务流程）
+	Kafka struct {
+		Brokers []string `json:",optional"`
+	}
 }
 
 type MinioConf struct {

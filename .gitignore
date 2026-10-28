@@ -54,3 +54,7 @@ desktop.ini
 
 # Cursor 本地安装的技能不入库；团队共享规则可放行 .cursor/rules/
 .cursor/skills/
+
+# ---------- 本地构建缓存（沙箱内 go build/go mod 的临时 GOMODCACHE/GOCACHE）----------
+.tmp-gocache/
+.tmp-gomodcache/

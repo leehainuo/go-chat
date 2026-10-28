@@ -6,6 +6,7 @@ package handler
 import (
 	"net/http"
 
+	contact "go-chat/service/user/api/internal/handler/contact"
 	user "go-chat/service/user/api/internal/handler/user"
 	"go-chat/service/user/api/internal/svc"
 
@@ -13,6 +14,65 @@ import (
 )
 
 func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
+	server.AddRoutes(
+		rest.WithMiddlewares(
+			[]rest.Middleware{serverCtx.JwtAuthMiddleware},
+			[]rest.Route{
+				{
+					Method:  http.MethodPost,
+					Path:    "/:userID/application/:status",
+					Handler: contact.ModifyFriendApplicationStatusHandler(serverCtx),
+				},
+				{
+					Method:  http.MethodGet,
+					Path:    "/:userID/apply",
+					Handler: contact.GetApplyListHandler(serverCtx),
+				},
+				{
+					Method:  http.MethodGet,
+					Path:    "/:userID/applyCount",
+					Handler: contact.GetUnreadApplyCountHandler(serverCtx),
+				},
+				{
+					Method:  http.MethodPost,
+					Path:    "/:userID/block/:receiveuserID",
+					Handler: contact.BlockFriendHandler(serverCtx),
+				},
+				{
+					Method:  http.MethodDelete,
+					Path:    "/:userID/block/:receiveuserID",
+					Handler: contact.UnblockFriendHandler(serverCtx),
+				},
+				{
+					Method:  http.MethodGet,
+					Path:    "/:userID/friend",
+					Handler: contact.GetFriendsHandler(serverCtx),
+				},
+				{
+					Method:  http.MethodGet,
+					Path:    "/:userID/friend/:friendID",
+					Handler: contact.GetFriendDetailHandler(serverCtx),
+				},
+				{
+					Method:  http.MethodPost,
+					Path:    "/:userID/friend/:receiveuserID",
+					Handler: contact.SendFriendRequestHandler(serverCtx),
+				},
+				{
+					Method:  http.MethodDelete,
+					Path:    "/:userID/friend/:receiveuserID",
+					Handler: contact.DeleteFriendHandler(serverCtx),
+				},
+				{
+					Method:  http.MethodGet,
+					Path:    "/:userID/user/search",
+					Handler: contact.SearchUserHandler(serverCtx),
+				},
+			}...,
+		),
+		rest.WithPrefix("/api/contact"),
+	)
+
 	server.AddRoutes(
 		[]rest.Route{
 			{

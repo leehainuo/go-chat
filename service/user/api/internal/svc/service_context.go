@@ -18,9 +18,13 @@ import (
 	"go-chat/service/user/api/internal/middleware"
 	"go-chat/service/user/api/internal/service"
 	"go-chat/service/user/api/internal/wslocator"
+	applyfriendmodel "go-chat/service/user/model/apply_friend"
 	balancelogmodel "go-chat/service/user/model/balance_log"
+	friendmodel "go-chat/service/user/model/friend"
+	sessionmodel "go-chat/service/user/model/session"
 	usermodel "go-chat/service/user/model/user"
 	userbalancemodel "go-chat/service/user/model/user_balance"
+	usersessionmodel "go-chat/service/user/model/user_session"
 )
 
 type ServiceContext struct {
@@ -30,6 +34,12 @@ type ServiceContext struct {
 	UserModel         usermodel.UserModel
 	UserBalanceModel  userbalancemodel.UserBalanceModel
 	BalanceLogModel   balancelogmodel.BalanceLogModel
+	FriendModel       friendmodel.FriendModel
+	ApplyFriendModel  applyfriendmodel.ApplyFriendModel
+	SessionModel      sessionmodel.SessionModel
+	UserSessionModel  usersessionmodel.UserSessionModel
+	Notifier          service.ContactNotifier
+	Friends           *service.FriendService
 	Locator           *wslocator.Locator
 	Minio             *minio.Client
 	Tokens            *service.TokenService
@@ -43,13 +53,32 @@ func NewServiceContext(c config.Config) *ServiceContext {
 	mc := newMinioClient(c.Minio)
 	ensureBucket(mc, c.Minio.Bucket)
 
+	friendModel := friendmodel.NewFriendModel(conn, c.CacheRedis)
+	applyFriendModel := applyfriendmodel.NewApplyFriendModel(conn, c.CacheRedis)
+	sessionModel := sessionmodel.NewSessionModel(conn, c.CacheRedis)
+	userSessionModel := usersessionmodel.NewUserSessionModel(conn, c.CacheRedis)
+
 	return &ServiceContext{
-		Config:            c,
-		Conn:              conn,
-		Redis:             rds,
-		UserModel:         usermodel.NewUserModel(conn, c.CacheRedis),
-		UserBalanceModel:  userbalancemodel.NewUserBalanceModel(conn, c.CacheRedis),
-		BalanceLogModel:   balancelogmodel.NewBalanceLogModel(conn, c.CacheRedis),
+		Config:           c,
+		Conn:             conn,
+		Redis:            rds,
+		UserModel:        usermodel.NewUserModel(conn, c.CacheRedis),
+		UserBalanceModel: userbalancemodel.NewUserBalanceModel(conn, c.CacheRedis),
+		BalanceLogModel:  balancelogmodel.NewBalanceLogModel(conn, c.CacheRedis),
+		FriendModel:      friendModel,
+		ApplyFriendModel: applyFriendModel,
+		SessionModel:     sessionModel,
+		UserSessionModel: userSessionModel,
+		Notifier:         service.NewContactNotifier(c.Kafka.Brokers),
+		Friends: &service.FriendService{
+			UserModel:        usermodel.NewUserModel(conn, c.CacheRedis),
+			ApplyFriendModel: applyFriendModel,
+			FriendModel:      friendModel,
+			SessionModel:     sessionModel,
+			UserSessionModel: userSessionModel,
+			Redis:            rds,
+			Conn:             conn,
+		},
 		Locator:           locator,
 		Minio:             mc,
 		Tokens:            service.NewTokenService(rds, c.JwtAuth.AccessSecret, locator),

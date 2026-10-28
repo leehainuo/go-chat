@@ -3,6 +3,16 @@
 
 package types
 
+type ApplyItem struct {
+	UserId     int64  `json:"userId"`
+	Nickname   string `json:"nickname"`
+	Avatar     string `json:"avatar"`
+	Message    string `json:"message"`
+	Status     int64  `json:"status"`
+	UpdateTime string `json:"updateTime"`
+	IsReceiver int64  `json:"isReceiver"`
+}
+
 type BalanceDetailItem struct {
 	LogId        int64  `json:"logId"`
 	Type         int64  `json:"type"`
@@ -39,6 +49,73 @@ type BalanceResp struct {
 	BalanceFen int64  `json:"balanceFen"`
 }
 
+type FriendDetailVO struct {
+	UserId    int64  `json:"userId"`
+	Nickname  string `json:"nickname"`
+	Avatar    string `json:"avatar"`
+	Phone     string `json:"phone"`
+	Email     string `json:"email"`
+	Signature string `json:"signature"`
+	Gender    int64  `json:"gender"`
+	Status    int64  `json:"status"`
+	SessionId string `json:"sessionId"`
+}
+
+type FriendItem struct {
+	UserId    int64  `json:"userId"`
+	Nickname  string `json:"nickname"`
+	Avatar    string `json:"avatar"`
+	Signature string `json:"signature"`
+	Status    int64  `json:"status"`
+	SessionId string `json:"sessionId"`
+}
+
+type GetApplyListReq struct {
+	UserId   int64 `path:"userID"`
+	PageNum  int64 `form:"pageNum,optional,default=1"`
+	PageSize int64 `form:"pageSize,optional,default=10"`
+}
+
+type GetApplyListResp struct {
+	List        []ApplyItem `json:"list"`
+	Total       int64       `json:"total"`
+	PageNum     int64       `json:"pageNum"`
+	PageSize    int64       `json:"pageSize"`
+	Pages       int64       `json:"pages"`
+	HasNext     bool        `json:"hasNext"`
+	HasPrevious bool        `json:"hasPrevious"`
+}
+
+type GetFriendDetailReq struct {
+	UserId   int64 `path:"userID"`
+	FriendId int64 `path:"friendID"`
+}
+
+type GetFriendsReq struct {
+	UserId   int64  `path:"userID"`
+	PageNum  int64  `form:"pageNum,optional,default=1"`
+	PageSize int64  `form:"pageSize,optional,default=10"`
+	Keyword  string `form:"keyword,optional"`
+}
+
+type GetFriendsResp struct {
+	List        []FriendItem `json:"list"`
+	Total       int64        `json:"total"`
+	PageNum     int64        `json:"pageNum"`
+	PageSize    int64        `json:"pageSize"`
+	Pages       int64        `json:"pages"`
+	HasNext     bool         `json:"hasNext"`
+	HasPrevious bool         `json:"hasPrevious"`
+}
+
+type GetUnreadApplyCountReq struct {
+	UserId int64 `path:"userID"`
+}
+
+type GetUnreadApplyCountResp struct {
+	Count int64 `json:"count"`
+}
+
 type LoginCodeReq struct {
 	Account string `json:"account"`
 	Code    string `json:"code"`
@@ -54,6 +131,16 @@ type LoginResp struct {
 	AccessToken  string `json:"accessToken"`
 	RefreshToken string `json:"refreshToken"`
 	WsServerUri  string `json:"wsServerUri"`
+}
+
+type ModifyApplyStatusResp struct {
+	SessionId string `json:"sessionId"`
+}
+
+type ModifyFriendApplicationStatusReq struct {
+	UserId    int64   `path:"userID"`
+	Status    int64   `path:"status"`
+	SenderIds []int64 `json:"senderIds"`
 }
 
 type RefreshTokenReq struct {
@@ -72,8 +159,23 @@ type RegisterReq struct {
 	Nickname string `json:"nickname,optional"`
 }
 
+type SearchUserReq struct {
+	UserId  int64  `path:"userID"`
+	Keyword string `form:"keyword"`
+}
+
 type SendCaptchaReq struct {
 	Account string `form:"account,optional"`
+}
+
+type SendFriendRequestReq struct {
+	UserId        int64  `path:"userID"`
+	ReceiveuserId int64  `path:"receiveuserID"`
+	Message       string `json:"message,optional"`
+}
+
+type SendFriendRequestResp struct {
+	ApplyId int64 `json:"applyId"`
 }
 
 type SimpleResp struct {
@@ -97,6 +199,11 @@ type UploadUrlResp struct {
 	UploadUrl   string `json:"uploadUrl"`
 	DownloadUrl string `json:"downloadUrl"`
 	ObjectKey   string `json:"objectKey"`
+}
+
+type UserIdAndReceiveuserIdReq struct {
+	UserId        int64 `path:"userID"`
+	ReceiveuserId int64 `path:"receiveuserID"`
 }
 
 type UserInfoResp struct {

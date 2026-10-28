@@ -3,7 +3,7 @@ Host: 0.0.0.0
 Port: 8001
 
 MySQL:
-  DataSource: root:go-chat@tcp(localhost:3306)/gochat?charset=utf8mb4&parseTime=True&loc=Local
+  DataSource: root:go-chat@tcp(localhost:13306)/gochat?charset=utf8mb4&parseTime=True&loc=Local
 
 Redis:
   Host: localhost:6379
@@ -28,3 +28,8 @@ Etcd:
   Endpoints:
     - localhost:2379
   Prefix: /services/realtimeservice
+
+# Kafka 通知（可选：为空则降级为仅日志，不阻断业务；DR-5）
+Kafka:
+  Brokers:
+    - localhost:9092

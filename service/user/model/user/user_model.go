@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strings"
 
 	"github.com/zeromicro/go-zero/core/stores/cache"
 	"github.com/zeromicro/go-zero/core/stores/sqlx"
@@ -27,6 +28,9 @@ type (
 		UpdatePasswordByUserId(ctx context.Context, userId int64, password string) error
 		// UpdateAvatarByUserId 更新头像并清除主键缓存 key
 		UpdateAvatarByUserId(ctx context.Context, userId int64, avatar string) error
+		// FindByUserIds 批量查询用户信息（联系人模块好友列表组装用，避免 N+1）。
+		// 纯展示用途、行数不可控，不走行缓存。
+		FindByUserIds(ctx context.Context, userIds []int64) ([]*User, error)
 	}
 
 	customUserModel struct {
@@ -43,9 +47,10 @@ func NewUserModel(conn sqlx.SqlConn, c cache.CacheConf, opts ...cache.Option) Us
 
 // TxInsert 在事务 session 上执行插入；事务外的插入请使用生成的 Insert（带缓存维护）。
 func (m *customUserModel) TxInsert(ctx context.Context, session sqlx.Session, data *User) error {
-	query := "insert into " + m.table + " (" + userRowsExpectAutoSet + ") values (?, ?, ?, ?, ?, ?)"
+	query := "insert into " + m.table + " (" + userRowsExpectAutoSet + ") values (?, ?, ?, ?, ?, ?, ?, ?, ?)"
 	_, err := session.ExecCtx(ctx, query,
-		data.UserId, data.Nickname, data.Password, data.Phone, data.Email, data.Avatar)
+		data.UserId, data.Nickname, data.Password, data.Phone, data.Email, data.Avatar,
+		data.State, data.Gender, data.Description)
 	return err
 }
 
@@ -80,4 +85,19 @@ func (m *customUserModel) UpdateAvatarByUserId(ctx context.Context, userId int64
 		return conn.ExecCtx(ctx, query, avatar, userId)
 	}, userUserIdKey)
 	return err
+}
+
+func (m *customUserModel) FindByUserIds(ctx context.Context, userIds []int64) ([]*User, error) {
+	if len(userIds) == 0 {
+		return []*User{}, nil
+	}
+	placeholders := strings.TrimSuffix(strings.Repeat("?,", len(userIds)), ",")
+	query := "select " + userRows + " from " + m.table + " where `user_id` in (" + placeholders + ")"
+	args := make([]any, 0, len(userIds))
+	for _, id := range userIds {
+		args = append(args, id)
+	}
+	var resp []*User
+	err := m.QueryRowsNoCacheCtx(ctx, &resp, query, args...)
+	return resp, err
 }
